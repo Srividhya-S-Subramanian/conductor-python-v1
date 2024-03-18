@@ -84,6 +84,7 @@ def greetings_workflow(workflow_executor: WorkflowExecutor) -> ConductorWorkflow
     name = 'hello'
     workflow = ConductorWorkflow(name=name, executor=workflow_executor)
     workflow.version = 1
+    #Specify the order in which the tasks need to be executed ex: Task1() >> Task2() >> Task3()
     workflow >> greet(task_ref_name='greet_ref', name=workflow.input('name'))
     return workflow
 
@@ -163,13 +164,17 @@ def main():
     workflow = register_workflow(workflow_executor)
 
     task_handler = TaskHandler(configuration=api_config)
+
+    # start worker polling
     task_handler.start_processes()
 
+    #Workflows can be run either from the UI or from code; Here we are running the workflow from code
     workflow_run = workflow_executor.execute(name=workflow.name, version=workflow.version,
                                              workflow_input={'name': 'Orkes'})
 
     print(f'\nworkflow result: {workflow_run.output["result"]}\n')
     print(f'see the workflow execution here: {api_config.ui_host}/execution/{workflow_run.workflow_id}\n')
+    # Call to stop the workers when the application is ready to shutdown
     task_handler.stop_processes()
 
 
